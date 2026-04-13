@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="theme-color" content="#c8a0e8">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="每日一籤">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-192.png">
+<title>每日一籤</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Georgia', 'Noto Serif TC', serif;
+    background: linear-gradient(135deg, #fdf6f0 0%, #f5eef8 50%, #eef4fd 100%);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 2rem 1rem;
+    color: #3a2e4a;
+  }
+  h1 { font-size: 1.5rem; font-weight: 400; letter-spacing: 0.3em; color: #7a6090; margin-bottom: 0.3rem; }
+  .subtitle { font-size: 0.8rem; color: #b0a0c0; letter-spacing: 0.15em; margin-bottom: 2rem; }
+  .date-badge {
+    font-size: 0.75rem; color: #9a88b0;
+    background: rgba(160,130,190,0.12);
+    border-radius: 20px; padding: 4px 14px;
+    margin-bottom: 2rem; letter-spacing: 0.1em;
+  }
+  .card-wrap { perspective: 1000px; width: 300px; height: 420px; margin-bottom: 2rem; cursor: pointer; }
+  .card { width: 100%; height: 100%; position: relative; transform-style: preserve-3d; transition: transform 0.7s cubic-bezier(.4,0,.2,1); }
+  .card.flipped { transform: rotateY(180deg); }
+  .card-front, .card-back {
+    position: absolute; inset: 0; border-radius: 24px;
+    backface-visibility: hidden; -webkit-backface-visibility: hidden;
+    display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 1.5rem;
+  }
+  .card-front {
+    background: linear-gradient(160deg, #f9f0ff 0%, #f0e8f8 100%);
+    border: 1.5px solid rgba(180,150,220,0.3);
+    box-shadow: 0 8px 32px rgba(150,100,200,0.12);
+  }
+  .card-back {
+    background: linear-gradient(160deg, #fff8f2 0%, #fdf0fb 60%, #f0f4ff 100%);
+    border: 1.5px solid rgba(200,170,230,0.3);
+    box-shadow: 0 8px 32px rgba(150,100,200,0.15);
+    transform: rotateY(180deg); text-align: center;
+  }
+  .front-icon { font-size: 3.5rem; margin-bottom: 1rem; line-height:1; }
+  .front-title { font-size: 1.2rem; color: #8060a0; letter-spacing: 0.2em; margin-bottom: 0.4rem; }
+  .front-hint { font-size: 0.75rem; color: #b090c8; letter-spacing: 0.1em; }
+  .back-illus { width: 110px; height: 110px; margin-bottom: 1rem; }
+  .back-tag {
+    font-size: 0.7rem; color: #b890d0; letter-spacing: 0.15em; margin-bottom: 0.6rem;
+    background: rgba(180,130,220,0.12); border-radius: 12px; padding: 3px 10px;
+  }
+  .back-quote { font-size: 1rem; line-height: 1.7; color: #4a3860; margin-bottom: 1rem; font-style: italic; }
+  .back-source { font-size: 0.72rem; color: #b0a0c8; letter-spacing: 0.08em; }
+  .draw-btn {
+    background: linear-gradient(135deg, #c8a0e8 0%, #a888d0 100%);
+    color: white; border: none; border-radius: 40px;
+    padding: 0.85rem 2.5rem; font-size: 1rem; letter-spacing: 0.2em;
+    font-family: inherit; cursor: pointer;
+    box-shadow: 0 4px 18px rgba(160,100,210,0.25);
+    transition: transform 0.15s, box-shadow 0.15s; margin-bottom: 1rem;
+  }
+  .draw-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 22px rgba(160,100,210,0.35); }
+  .draw-btn:active { transform: scale(0.97); }
+  .draw-btn:disabled { background: linear-gradient(135deg, #d8c8e8 0%, #c8b8d8 100%); cursor: default; box-shadow: none; transform: none; }
+  .msg { font-size: 0.78rem; color: #b0a0c8; letter-spacing: 0.05em; text-align: center; }
+  .reset-btn {
+    margin-top: 0.6rem; font-size: 0.72rem; color: #c0a8d8;
+    background: none; border: 1px solid rgba(180,140,220,0.3);
+    border-radius: 20px; padding: 4px 14px; cursor: pointer;
+    font-family: inherit; letter-spacing: 0.05em;
+  }
+  .reset-btn:hover { background: rgba(180,140,220,0.1); }
+</style>
+</head>
+<body>
+
+<h1>每 日 一 籤</h1>
+<div class="subtitle">靈魂小語 · Soul Notes</div>
+<div class="date-badge" id="dateBadge"></div>
+
+<div class="card-wrap" id="cardWrap" onclick="flipCard()">
+  <div class="card" id="card">
+    <div class="card-front">
+      <div class="front-icon">✦</div>
+      <div class="front-title">今日一籤</div>
+      <div class="front-hint">點擊翻開 · 或按下方按鈕</div>
+    </div>
+    <div class="card-back" id="cardBack"></div>
+  </div>
+</div>
+
+<button class="draw-btn" id="drawBtn" onclick="drawCard()">✦ 抽 今 日 籤 ✦</button>
+<div class="msg" id="msg"></div>
+<button class="reset-btn" id="resetBtn" style="display:none" onclick="resetCard()">↺ 重置（僅供測試）</button>
+
+<script>
+const FORTUNES = [
+  { tag:"榮格智慧", quote:"你的幻象是你所能看見的最美的東西，\n它引領你走向內心最深的真實。", source:"— Carl G. Jung", illus:"moon" },
+  { tag:"療癒短句", quote:"你不需要把自己解釋給任何人聽。\n只要靜靜地，做你自己就好。", source:"", illus:"flower" },
+  { tag:"榮格智慧", quote:"我們遇見的人，都是我們內心\n某一部分的鏡子。", source:"— Carl G. Jung", illus:"star" },
+  { tag:"療癒短句", quote:"有些事情不需要努力，\n只需要放下。", source:"", illus:"cloud" },
+  { tag:"榮格智慧", quote:"使你與眾不同的，\n正是你最深的傷痕所在。", source:"— Carl G. Jung", illus:"butterfly" },
+  { tag:"療癒短句", quote:"今天不需要完美，\n今天只需要繼續。", source:"", illus:"moon" },
+  { tag:"榮格智慧", quote:"生命的意義，在於點燃光芒，\n而非找到它。", source:"— Carl G. Jung", illus:"star" },
+  { tag:"療癒短句", quote:"你的感受是真實的，\n你的疲倦也值得被善待。", source:"", illus:"flower" },
+  { tag:"榮格智慧", quote:"那些無法承受的，\n最終都成為了你的力量。", source:"— Carl G. Jung", illus:"butterfly" },
+  { tag:"療癒短句", quote:"慢一點也沒關係，\n你走的每一步都算數。", source:"", illus:"cloud" },
+  { tag:"榮格智慧", quote:"直到你讓無意識化為有意識，\n它才不會左右你的命運。", source:"— Carl G. Jung", illus:"moon" },
+  { tag:"療癒短句", quote:"不是每一個傷口都需要被人看見，\n但你值得自己輕輕地知道。", source:"", illus:"star" },
+  { tag:"榮格智慧", quote:"孤獨並不來自身邊無人，\n而來自無法對人說出你心中最重要的事。", source:"— Carl G. Jung", illus:"cloud" },
+  { tag:"療癒短句", quote:"有時候休息，\n就是在前進。", source:"", illus:"flower" },
+  { tag:"榮格智慧", quote:"真正的自我，不是你展現給世界的樣子，\n而是你在黑暗中獨自面對的那個人。", source:"— Carl G. Jung", illus:"butterfly" },
+  { tag:"療癒短句", quote:"你已經比昨天的自己，\n更溫柔了一點。", source:"", illus:"star" },
+  { tag:"榮格智慧", quote:"我不是我所發生的事，\n我是我選擇成為的人。", source:"— Carl G. Jung", illus:"moon" },
+  { tag:"療癒短句", quote:"深吸一口氣，\n這一刻你是安全的。", source:"", illus:"cloud" },
+  { tag:"榮格智慧", quote:"沒有黑暗的人生是膚淺的，\n有過痛苦才懂得光的珍貴。", source:"— Carl G. Jung", illus:"flower" },
+  { tag:"療癒短句", quote:"不需要每天都燦爛，\n平靜本身就是一種美麗。", source:"", illus:"butterfly" },
+  { tag:"榮格智慧", quote:"夢是通向靈魂深處的小路，\n請不要忽視它帶來的訊息。", source:"— Carl G. Jung", illus:"moon" },
+  { tag:"療癒短句", quote:"你不欠任何人一個\n永遠開心的自己。", source:"", illus:"star" },
+  { tag:"榮格智慧", quote:"如果你連自己的秘密都不能接受，\n怎能接受別人的愛？", source:"— Carl G. Jung", illus:"flower" },
+  { tag:"療癒短句", quote:"今天的雲朵，\n也替你承載了一些重量。", source:"", illus:"cloud" },
+  { tag:"榮格智慧", quote:"一切偉大的事物都發生在\n靜默之中。", source:"— Carl G. Jung", illus:"butterfly" },
+  { tag:"療癒短句", quote:"你選擇留下來，\n就已經是一種勇敢。", source:"", illus:"star" },
+  { tag:"榮格智慧", quote:"成為自己，\n是這一生最重要的功課。", source:"— Carl G. Jung", illus:"moon" },
+  { tag:"療癒短句", quote:"春天每年都會回來，\n你也是。", source:"", illus:"flower" },
+  { tag:"榮格智慧", quote:"陰影不是你的敵人，\n它是你尚未認識的自己。", source:"— Carl G. Jung", illus:"cloud" },
+  { tag:"療癒短句", quote:"此刻的你，\n已經足夠了。", source:"", illus:"butterfly" }
+];
+
+const ILLUS = {
+  moon: `<svg viewBox="0 0 110 110" xmlns="http://www.w3.org/2000/svg" class="back-illus"><circle cx="55" cy="55" r="30" fill="#f0d8f8" stroke="#d0a8e8" stroke-width="1.5"/><circle cx="68" cy="42" r="22" fill="#fdf0ff"/><circle cx="30" cy="28" r="4" fill="#e8d0f8" opacity="0.6"/><circle cx="85" cy="35" r="2.5" fill="#e8d0f8" opacity="0.5"/><circle cx="20" cy="68" r="3" fill="#e8d0f8" opacity="0.4"/><circle cx="90" cy="75" r="2" fill="#e8d0f8" opacity="0.5"/></svg>`,
+  flower: `<svg viewBox="0 0 110 110" xmlns="http://www.w3.org/2000/svg" class="back-illus"><circle cx="55" cy="40" r="9" fill="#f8d0e8" stroke="#e8a8d0" stroke-width="1"/><ellipse cx="55" cy="24" rx="7" ry="10" fill="#fce0f0" stroke="#e8b8d8" stroke-width="1"/><ellipse cx="55" cy="56" rx="7" ry="10" fill="#fce0f0" stroke="#e8b8d8" stroke-width="1"/><ellipse cx="41" cy="32" rx="7" ry="10" fill="#fce0f0" stroke="#e8b8d8" stroke-width="1" transform="rotate(-60 41 32)"/><ellipse cx="69" cy="32" rx="7" ry="10" fill="#fce0f0" stroke="#e8b8d8" stroke-width="1" transform="rotate(60 69 32)"/><ellipse cx="41" cy="48" rx="7" ry="10" fill="#fce0f0" stroke="#e8b8d8" stroke-width="1" transform="rotate(60 41 48)"/><ellipse cx="69" cy="48" rx="7" ry="10" fill="#fce0f0" stroke="#e8b8d8" stroke-width="1" transform="rotate(-60 69 48)"/><circle cx="55" cy="40" r="7" fill="#f9c8e0"/><line x1="55" y1="49" x2="55" y2="90" stroke="#a8d8a0" stroke-width="2.5" stroke-linecap="round"/><ellipse cx="42" cy="70" rx="12" ry="7" fill="#c8e8b8" transform="rotate(-30 42 70)"/><ellipse cx="68" cy="76" rx="12" ry="7" fill="#c8e8b8" transform="rotate(30 68 76)"/></svg>`,
+  star: `<svg viewBox="0 0 110 110" xmlns="http://www.w3.org/2000/svg" class="back-illus"><polygon points="55,20 61,40 82,40 66,52 72,72 55,60 38,72 44,52 28,40 49,40" fill="#f8e8a0" stroke="#e8c840" stroke-width="1.5"/><circle cx="25" cy="28" r="3" fill="#f8d8f8" opacity="0.8"/><circle cx="85" cy="22" r="2" fill="#f8d8f8" opacity="0.7"/><circle cx="18" cy="65" r="2.5" fill="#d8e8f8" opacity="0.7"/><circle cx="88" cy="70" r="3" fill="#d8e8f8" opacity="0.6"/></svg>`,
+  cloud: `<svg viewBox="0 0 110 110" xmlns="http://www.w3.org/2000/svg" class="back-illus"><ellipse cx="55" cy="52" rx="35" ry="22" fill="#e8f0fc" stroke="#c0d0f0" stroke-width="1.5"/><circle cx="38" cy="50" r="18" fill="#e8f0fc" stroke="#c0d0f0" stroke-width="1.5"/><circle cx="68" cy="48" r="20" fill="#e8f0fc" stroke="#c0d0f0" stroke-width="1.5"/><circle cx="52" cy="42" r="16" fill="#f0f6ff" stroke="#c0d0f0" stroke-width="1"/><line x1="40" y1="78" x2="38" y2="90" stroke="#a8c0f0" stroke-width="1.5" stroke-linecap="round"/><line x1="55" y1="78" x2="55" y2="93" stroke="#a8c0f0" stroke-width="1.5" stroke-linecap="round"/><line x1="70" y1="76" x2="72" y2="88" stroke="#a8c0f0" stroke-width="1.5" stroke-linecap="round"/></svg>`,
+  butterfly: `<svg viewBox="0 0 110 110" xmlns="http://www.w3.org/2000/svg" class="back-illus"><ellipse cx="35" cy="42" rx="22" ry="16" fill="#f0d8f8" stroke="#d0a8e8" stroke-width="1.5" transform="rotate(-20 35 42)"/><ellipse cx="75" cy="42" rx="22" ry="16" fill="#f0d8f8" stroke="#d0a8e8" stroke-width="1.5" transform="rotate(20 75 42)"/><ellipse cx="38" cy="62" rx="14" ry="10" fill="#fce0f8" stroke="#d8b0e8" stroke-width="1" transform="rotate(15 38 62)"/><ellipse cx="72" cy="62" rx="14" ry="10" fill="#fce0f8" stroke="#d8b0e8" stroke-width="1" transform="rotate(-15 72 62)"/><path d="M52 35 Q55 55 52 80" stroke="#8060a0" stroke-width="1.5" fill="none" stroke-linecap="round"/><path d="M58 35 Q55 55 58 80" stroke="#8060a0" stroke-width="1.5" fill="none" stroke-linecap="round"/><path d="M52 35 Q50 28 46 24" stroke="#8060a0" stroke-width="1.2" fill="none" stroke-linecap="round"/><path d="M58 35 Q60 28 64 24" stroke="#8060a0" stroke-width="1.2" fill="none" stroke-linecap="round"/><circle cx="46" cy="23" r="2" fill="#c090e0"/><circle cx="64" cy="23" r="2" fill="#c090e0"/></svg>`
+};
+
+const TODAY = new Date().toLocaleDateString('zh-TW',{year:'numeric',month:'long',day:'numeric',weekday:'long'});
+document.getElementById('dateBadge').textContent = TODAY;
+
+const STORAGE_KEY = 'dailyFortune_v2';
+function getTodayStr() { const d=new Date(); return `${d.getFullYear()}-${d.getMonth()+1}-${d.getDate()}`; }
+function getSaved() { try { const s=localStorage.getItem(STORAGE_KEY); if(!s) return null; const o=JSON.parse(s); return o.date===getTodayStr()?o.idx:null; } catch(e){return null;} }
+function save(idx) { try { localStorage.setItem(STORAGE_KEY,JSON.stringify({date:getTodayStr(),idx})); } catch(e){} }
+
+let drawn=false;
+
+function renderBack(f) {
+  document.getElementById('cardBack').innerHTML=`${ILLUS[f.illus]}<div class="back-tag">${f.tag}</div><div class="back-quote">${f.quote.replace(/\n/g,'<br>')}</div>${f.source?`<div class="back-source">${f.source}</div>`:''}`;
+}
+function flipCard() { if(!drawn)return; document.getElementById('card').classList.toggle('flipped'); }
+function drawCard() {
+  if(drawn)return;
+  let idx=getSaved(); if(idx===null){idx=Math.floor(Math.random()*FORTUNES.length);save(idx);}
+  renderBack(FORTUNES[idx]); drawn=true;
+  setTimeout(()=>document.getElementById('card').classList.add('flipped'),200);
+  document.getElementById('drawBtn').disabled=true;
+  document.getElementById('msg').textContent='今天的籤已抽完，明天再來 ✦';
+  document.getElementById('resetBtn').style.display='inline-block';
+}
+function resetCard() {
+  try{localStorage.removeItem(STORAGE_KEY);}catch(e){}
+  drawn=false; document.getElementById('card').classList.remove('flipped');
+  document.getElementById('drawBtn').disabled=false;
+  document.getElementById('msg').textContent='';
+  document.getElementById('resetBtn').style.display='none';
+}
+
+window.addEventListener('DOMContentLoaded',()=>{
+  const saved=getSaved();
+  if(saved!==null){renderBack(FORTUNES[saved]);drawn=true;document.getElementById('card').classList.add('flipped');document.getElementById('drawBtn').disabled=true;document.getElementById('msg').textContent='今天的籤已抽完，明天再來 ✦';document.getElementById('resetBtn').style.display='inline-block';}
+});
+
+if('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js');
+</script>
+</body>
+</html>

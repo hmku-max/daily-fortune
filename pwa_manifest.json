@@ -1,0 +1,25 @@
+{
+  "name": "每日一籤 — 靈魂小語",
+  "short_name": "每日一籤",
+  "description": "每天抽一張榮格智慧與療癒短句籤",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#fdf6f0",
+  "theme_color": "#c8a0e8",
+  "orientation": "portrait",
+  "lang": "zh-TW",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
